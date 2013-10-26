@@ -1,0 +1,122 @@
+<html>
+
+<head>
+	<title>Chat with Socket.IO and Node.Js</title>
+	<style type="text/css">
+		#chat{
+			height: 500px;
+			width: 100%;
+		}
+		#contentWrap{
+			border-radius: 2px;
+			display: none;
+			box-shadow: 1;
+			background-color: yellow;
+		}
+		#chatWrap{
+			float: left;
+			border: 1px #000 solid;
+		}
+		.err{
+			color: red;
+		}
+		.whisper{
+			color: gray;
+			font-style: italic;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="nickWrap">
+		<p>Enter a username</p>
+		<p id="nickError"></p>
+		<form id="setNick">
+			<input size="35" id="nickname"></input>
+			<input type="submit"></input>
+		</form>
+	</div>	
+
+	<div id="contentWrap">
+		<div id="chatWrap">
+			<div id="chat"></div>
+			<form id="send-message">
+				<input size="35" id="message"> </input>
+				<input type="submit"></input>
+			</form>
+		</div>
+		<div id="users"></div>
+	</div>
+
+	
+
+	<script src="http:////ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+	<script src="/socket.io/socket.io.js"></script>
+
+	<script>
+		jQuery(function($){
+			var socket = io.connect();
+			var $messForm = $('#send-message');
+			var $messBox = $('#message');
+			var $chat = $('#chat'); 
+			var $nicForm = $('#setNick');
+			var $nicErr = $('#nickError');
+			var $nicBox= $('#nickname');
+			var $users = $('#users');
+
+			$nicForm.submit(function(e){
+				e.preventDefault();
+				socket.emit('newUser',$nicBox.val(),function(data){
+					if(data){
+						$('#nickWrap').hide();
+						$('#contentWrap').show();
+					}else{
+ 						$nicErr.html('User name is already taken, try different');
+					}
+				});
+				$nicBox.val('');
+			});
+
+			$messForm.submit(function(e){
+				e.preventDefault();
+				socket.emit('sendMessage',$messBox.val(),function(data){
+					$chat.append('<span class="err">' + data + '</span><br/>');
+				});
+				$messBox.val('');
+			});
+
+			socket.on('usernames',function(data){
+
+				var html='';
+				for(var i=0; i<data.length;i++){
+					html += data[i] + '<br/>';
+				}
+				$users.html(html);
+			});
+
+			socket.on('LoadOldMsg', function(docs){
+
+				for(var i=0; i< docs.length; i++){
+					displayMessage(docs[i]);
+				}
+			});
+
+			function displayMessage(data){
+				$chat.append('<span class="msg"><b>' + data.nick + ':</b>' + data.msg + '</span><br/>');
+			};
+
+			socket.on('newMessage',function(data){
+				displayMessage(data);
+			});
+
+			socket.on('whisper',function(data){
+				displayMessage(data);
+			})
+
+		});
+	</script>
+</body>
+
+</html>
