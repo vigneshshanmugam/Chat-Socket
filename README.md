@@ -1,4 +1,5 @@
-Test-Account
-============
+Chat Client:
 
-Projects
+A Chat Messenger built using socket.io Node Module.
+
+Tried this as my first Node Project.
